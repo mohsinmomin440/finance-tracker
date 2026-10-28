@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/layouts/RootLayout';
 import ThemeToggle from '@/components/ThemeToggle';
+import ApperIcon from '@/components/ApperIcon';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -12,11 +13,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 /**
- * Default account menu — ships with the template so every shell has one.
- * Overwrite it to restyle. Keep: the four optional props (user, initials,
- * displayName, logout — all derived from useAuth() when omitted), the
- * ThemeToggle in a plain container (never inside a DropdownMenuItem, which
- * closes on pointer-down and swallows the click), and the sign-out item.
+ * Aurora Glassmorphism account menu.
+ * Keeps all required props (user, initials, displayName, logout) and functionality:
+ * profile info, role badge, theme toggle in safe container, change password, and sign-out.
  */
 export default function UserMenu({ user: userProp, initials: initialsProp, displayName: displayNameProp, logout: logoutProp }) {
   const auth = useAuth();
@@ -38,31 +37,56 @@ export default function UserMenu({ user: userProp, initials: initialsProp, displ
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="flex items-center gap-2 rounded-full outline-none ring-ring focus-visible:ring-2"
+          className="flex size-9 min-h-[44px] min-w-[44px] items-center justify-center rounded-full outline-none transition-all hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           aria-label="Account menu"
         >
-          <Avatar className="size-9">
-            <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">{initials}</AvatarFallback>
+          <Avatar className="size-9 border border-white/20 dark:border-white/10 shadow-sm">
+            <AvatarFallback className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground text-xs font-bold tracking-tight">
+              {initials}
+            </AvatarFallback>
           </Avatar>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-60">
-        <DropdownMenuLabel>
-          <p className="text-sm font-medium text-foreground">{displayName}</p>
-          {user?.emailAddress && <p className="text-xs text-muted-foreground">{user.emailAddress}</p>}
-          {profileLabel && <p className="text-xs text-muted-foreground">{profileLabel}</p>}
+      <DropdownMenuContent
+        align="end"
+        sideOffset={8}
+        className="w-64 rounded-2xl border border-white/15 dark:border-white/10 bg-popover/95 backdrop-blur-2xl shadow-2xl p-2 animate-in fade-in-0 zoom-in-95"
+      >
+        <DropdownMenuLabel className="p-2.5">
+          <p className="text-sm font-semibold text-foreground tracking-tight truncate">{displayName}</p>
+          {user?.emailAddress && (
+            <p className="text-xs text-muted-foreground truncate mt-0.5">{user.emailAddress}</p>
+          )}
+          {profileLabel && (
+            <div className="mt-2">
+              <span className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/20">
+                {profileLabel}
+              </span>
+            </div>
+          )}
         </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuLabel className="text-xs text-muted-foreground">Theme</DropdownMenuLabel>
+        <DropdownMenuSeparator className="bg-border/60 my-1" />
+        <DropdownMenuLabel className="text-[11px] uppercase tracking-wider text-muted-foreground px-2.5 pt-1.5 pb-1">
+          Theme
+        </DropdownMenuLabel>
         <div className="px-2 pb-2">
-          <ThemeToggle className="w-full justify-between" />
+          <ThemeToggle className="w-full justify-between rounded-xl bg-muted/40 border border-border/50 p-1" />
         </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/change-password">Change password</Link>
+        <DropdownMenuSeparator className="bg-border/60 my-1" />
+        <DropdownMenuItem asChild className="rounded-xl px-3 py-2 text-sm cursor-pointer hover:bg-accent/80 focus:bg-accent/80 transition-colors">
+          <Link to="/change-password" className="flex items-center gap-2.5">
+            <ApperIcon name="KeyRound" size={15} className="text-muted-foreground" />
+            <span>Change password</span>
+          </Link>
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={logout}>Sign out</DropdownMenuItem>
+        <DropdownMenuSeparator className="bg-border/60 my-1" />
+        <DropdownMenuItem
+          onClick={logout}
+          className="rounded-xl px-3 py-2 text-sm text-destructive hover:bg-destructive/10 focus:bg-destructive/10 cursor-pointer transition-colors flex items-center gap-2.5 font-medium"
+        >
+          <ApperIcon name="LogOut" size={15} />
+          <span>Sign out</span>
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
