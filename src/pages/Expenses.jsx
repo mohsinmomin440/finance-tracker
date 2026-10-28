@@ -121,14 +121,15 @@ export default function Expenses() {
 
   const rows = data ?? [];
 
-  // Summary figures for filtered dataset
+  // Summary figures calculated strictly from the currently filtered dataset
   const { totalInflow, totalOutflow } = useMemo(() => {
     let inflow = 0;
     let outflow = 0;
     rows.forEach((r) => {
-      const amt = Number(r.amount_c) || 0;
-      if (r.kind_c === 'Income') inflow += amt;
-      else outflow += amt;
+      const amt = Number(r.amount_c);
+      const safeAmt = isNaN(amt) || amt === null || amt === undefined ? 0 : amt;
+      if (r.kind_c === 'Income') inflow += safeAmt;
+      else outflow += safeAmt;
     });
     return { totalInflow: inflow, totalOutflow: outflow };
   }, [rows]);
@@ -215,25 +216,42 @@ export default function Expenses() {
         <div className="mt-3.5 pt-3.5 border-t border-border/40 flex flex-wrap items-center justify-between gap-3 text-xs">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-semibold text-foreground/80">
-              {rows.length} {rows.length === 1 ? 'transaction' : 'transactions'}
+              {hasFilterActive ? 'Filtered records:' : 'All records:'} {rows.length} {rows.length === 1 ? 'transaction' : 'transactions'}
             </span>
             {hasFilterActive && (
               <span className="rounded-md bg-primary/15 border border-primary/25 px-2 py-0.5 text-primary text-[11px] font-semibold">
                 Filtered view
               </span>
             )}
+            {loading && Boolean(data) && (
+              <span className="flex items-center gap-1 text-[11px] text-muted-foreground animate-pulse ml-1">
+                <ApperIcon name="Loader2" size={11} className="animate-spin text-primary" /> Updating…
+              </span>
+            )}
           </div>
 
           <div className="flex items-center gap-3 tabular-nums">
             {kind !== 'Expense' && totalInflow > 0 && (
-              <div className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+              <div
+                className="flex items-center gap-1.5 text-emerald-400 font-semibold"
+                title={hasFilterActive ? 'Total inflow in current filtered view' : 'Total inflow across all records'}
+              >
                 <span className="size-1.5 rounded-full bg-emerald-400" />
+                <span className="text-[11px] font-normal text-muted-foreground mr-0.5">
+                  {hasFilterActive ? 'Filtered Inflow:' : 'Total Inflow:'}
+                </span>
                 <span>+{money(totalInflow)}</span>
               </div>
             )}
             {kind !== 'Income' && totalOutflow > 0 && (
-              <div className="flex items-center gap-1.5 text-rose-400 font-semibold">
+              <div
+                className="flex items-center gap-1.5 text-rose-400 font-semibold"
+                title={hasFilterActive ? 'Total outflow in current filtered view' : 'Total outflow across all records'}
+              >
                 <span className="size-1.5 rounded-full bg-rose-400" />
+                <span className="text-[11px] font-normal text-muted-foreground mr-0.5">
+                  {hasFilterActive ? 'Filtered Outflow:' : 'Total Outflow:'}
+                </span>
                 <span>−{money(totalOutflow)}</span>
               </div>
             )}
