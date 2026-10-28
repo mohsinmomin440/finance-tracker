@@ -46,9 +46,9 @@ export default function Expenses() {
         <div className="grid gap-3 sm:grid-cols-[1fr_180px]">
           <div className="relative">
             <ApperIcon name="Search" size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <Input className="pl-9" placeholder="Search transactions…" value={search} onChange={(event) => setSearch(event.target.value)} />
+            <Input className="pl-9" placeholder="Search transactions…" aria-label="Search transactions" value={search} onChange={(event) => setSearch(event.target.value)} />
           </div>
-          <select className="field-select" value={kind} onChange={(event) => setKind(event.target.value)}>
+          <select className="field-select" aria-label="Filter by transaction type" value={kind} onChange={(event) => setKind(event.target.value)}>
             <option>All</option>
             <option>Expense</option>
             <option>Income</option>
@@ -66,7 +66,7 @@ export default function Expenses() {
         {loading && !data ? (
           <div className="space-y-3 p-5">{Array.from({ length: 5 }).map((_, index) => <Skeleton key={index} className="h-14 w-full" />)}</div>
         ) : error ? (
-          <div className="p-6 text-sm text-destructive">{error.message} <button onClick={run} className="underline">Retry</button></div>
+          <div className="p-6 text-sm text-destructive">{typeof error === 'string' ? error : error?.message || 'Failed to load transactions.'} <button onClick={run} className="underline">Retry</button></div>
         ) : rows.length ? (
           <div className="divide-y divide-border/50">
             {rows.map((item) => (

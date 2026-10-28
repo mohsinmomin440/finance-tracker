@@ -18,12 +18,12 @@ export default function NotFound({ pageName }) {
             ? `The page "${pageName}" does not exist or has been moved.`
             : 'The page you requested does not exist or may have been moved.'}
         </p>
-        <Link to="/">
-          <Button size="lg" className="inline-flex items-center gap-2">
+        <Button size="lg" asChild className="inline-flex items-center gap-2">
+          <Link to="/">
             <Home data-icon="inline-start" />
             Return home
-          </Button>
-        </Link>
+          </Link>
+        </Button>
       </div>
     </div>
   );

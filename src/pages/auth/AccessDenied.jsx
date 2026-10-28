@@ -1,12 +1,15 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/layouts/RootLayout';
+import { getProfileMeta } from '@/services/userPermissions';
 import { APP_CONFIG, AUTH_PROFILES } from '@/config/app.config';
 import ApperIcon from '@/components/ApperIcon';
 import AuthLayout from './AuthLayout';
 
 export default function AccessDenied() {
   const { user, isAuthenticated } = useAuth();
+
+  const profileLabel = getProfileMeta(user?.profile)?.label || user?.profileLabel || user?.profile || 'current';
 
   return (
     <AuthLayout
@@ -16,7 +19,7 @@ export default function AccessDenied() {
       <div className="text-center space-y-5">
         <p className="text-sm text-muted-foreground">
           {isAuthenticated
-            ? `Your ${user?.profileLabel || 'current'} account doesn't have permission to access this page.`
+            ? `Your ${profileLabel} account doesn't have permission to access this page.`
             : 'You need to sign in to access this page.'}
         </p>
         {!isAuthenticated && AUTH_PROFILES?.length > 0 && (

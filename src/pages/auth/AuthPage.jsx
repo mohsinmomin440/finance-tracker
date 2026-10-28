@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { sdk } from '@/services/sdk';
 import { setUser } from '@/store/userSlice';
@@ -16,6 +16,7 @@ export default function AuthPage({ mode }) {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { profile: profileParam } = useParams();
+  const [searchParams] = useSearchParams();
 
   const hasProfiles = AUTH_PROFILES?.length > 0;
   const matchedProfile = hasProfiles && profileParam
@@ -69,7 +70,9 @@ export default function AuthPage({ mode }) {
       }
       if (result.ok) {
         dispatch(setUser(result.value));
-        navigate(redirectAfterAuth);
+        const redirectParam = searchParams.get('redirect');
+        const isSafeRedirect = redirectParam && redirectParam.startsWith('/') && !redirectParam.startsWith('//') && !redirectParam.startsWith('/\\') && !redirectParam.includes(':');
+        navigate(isSafeRedirect ? redirectParam : redirectAfterAuth);
       } else {
         setError(result.error?.message || 'Authentication failed');
       }

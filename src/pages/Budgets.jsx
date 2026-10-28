@@ -6,25 +6,170 @@ import ApperIcon from '@/components/ApperIcon';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog,DialogContent,DialogHeader,DialogTitle,DialogTrigger } from '@/components/ui/dialog';
-import { Select,SelectContent,SelectItem,SelectTrigger,SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { getCurrentMonthLocal } from '@/utils/date';
 
 export const route = { path: '/budgets', layout: 'owner', access: 'authenticated' };
 export const nav = { icon: 'ChartNoAxesCombined', label: 'Budgets', order: 30 };
-const money=v=>new Intl.NumberFormat('en-IN',{style:'currency',currency:'INR',maximumFractionDigits:0}).format(v||0);
-const categories=['Food & drink','Transport','Shopping','Bills','Health','Entertainment','Subscriptions','Travel','Education','Other'];
-export default function Budgets(){
- const [open,setOpen]=useState(false);const [saving,setSaving]=useState(false);const [search,setSearch]=useState('');
- const [form,setForm]=useState({Name:'',category_c:'Food & drink',limit_c:'',month_c:new Date().toISOString().slice(0,7),note_c:''});
- const {data:budgets,loading,error,run}=useFetch(()=>sdk.table('budgets_c').select(['Name','category_c','limit_c','month_c','note_c']).orderByDesc('CreatedOn').fetch().then(r=>{if(!r.success)throw new Error(r.message);return r.data;}),[]);
- const {data:expenses}=useFetch(()=>sdk.table('expenses_c').select(['Name','amount_c','category_c','date_c','kind_c']).fetch().then(r=>{if(!r.success)throw new Error(r.message);return r.data;}),[]);
- const rows=(budgets??[]).filter(x=>x.Name.toLowerCase().includes(search.toLowerCase())||x.category_c.toLowerCase().includes(search.toLowerCase()));
- const save=async e=>{e.preventDefault();if(!form.Name.trim()||Number(form.limit_c)<=0){toast.error('Enter a budget name and a limit greater than zero.');return;}setSaving(true);try{const r=await sdk.table('budgets_c').create({...form,limit_c:Number(form.limit_c)});if(!r.data?.length){toast.error(r.messages?.[0]||'Could not save budget.');return;}toast.success('Budget created');setOpen(false);setForm({Name:'',category_c:'Food & drink',limit_c:'',month_c:new Date().toISOString().slice(0,7),note_c:''});run();}catch(e){toast.error(e.message||'Could not save budget.');}finally{setSaving(false);}};
- const spentFor=b=> (expenses??[]).filter(x=>x.kind_c!=='Income'&&x.category_c===b.category_c&&(x.date_c||'').startsWith(b.month_c)).reduce((s,x)=>s+Number(x.amount_c||0),0);
- return <div className="space-y-6"><div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="eyebrow">A PLAN THAT FEELS GOOD</p><h1 className="page-title">Budgets</h1><p className="mt-2 text-sm text-muted-foreground">Give every rupee a little direction.</p></div><Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button className="h-11 rounded-xl"><ApperIcon name="Plus" size={16} className="mr-2"/>Create budget</Button></DialogTrigger><DialogContent className="glass-dialog"><DialogHeader><DialogTitle className="font-display text-2xl">Create a monthly budget</DialogTitle></DialogHeader><form onSubmit={save} className="space-y-4"><div className="space-y-2"><Label>Budget name</Label><Input placeholder="e.g. Weekend fun" value={form.Name} onChange={e=>setForm({...form,Name:e.target.value})} required/></div><div className="space-y-2"><Label>Category</Label><Select value={form.category_c} onValueChange={v=>setForm({...form,category_c:v})}><SelectTrigger><SelectValue/></SelectTrigger><SelectContent>{categories.map(c=><SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div><div className="space-y-2"><Label>Monthly limit (₹)</Label><Input type="number" min="1" step="0.01" placeholder="5000" value={form.limit_c} onChange={e=>setForm({...form,limit_c:e.target.value})} required/></div><div className="space-y-2"><Label>Month</Label><Input type="month" value={form.month_c} onChange={e=>setForm({...form,month_c:e.target.value})} required/></div><div className="space-y-2"><Label>Notes (optional)</Label><Input placeholder="What this budget is for" value={form.note_c} onChange={e=>setForm({...form,note_c:e.target.value})}/></div><Button className="w-full rounded-xl" disabled={saving}>{saving?'Saving…':'Save budget'}</Button></form></DialogContent></Dialog></div>
- <div className="grid gap-4 sm:grid-cols-3"><div className="metric-glass"><p className="text-sm text-muted-foreground">Active budgets</p><p className="mt-3 font-display text-2xl font-semibold">{rows.length}</p></div><div className="metric-glass"><p className="text-sm text-muted-foreground">Total planned</p><p className="mt-3 font-display text-2xl font-semibold">{money(rows.reduce((s,b)=>s+Number(b.limit_c||0),0))}</p></div><div className="metric-glass"><p className="text-sm text-muted-foreground">Remaining total</p><p className="mt-3 font-display text-2xl font-semibold">{money(rows.reduce((s,b)=>s+Math.max(Number(b.limit_c||0)-spentFor(b),0),0))}</p></div></div>
- <div className="relative"><ApperIcon name="Search" size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"/><Input className="pl-9" placeholder="Find a budget…" value={search} onChange={e=>setSearch(e.target.value)}/></div>
- {loading&&!budgets?<div className="glass-card p-6">Loading budgets…</div>:error?<div className="glass-card p-6 text-destructive">{error.message} <button onClick={run} className="underline">Retry</button></div>:rows.length?<div className="grid gap-4 md:grid-cols-2">{rows.map((b,i)=>{const spent=spentFor(b);const pct=Number(b.limit_c)?spent/Number(b.limit_c)*100:0;return <Link to={`/budgets/${b.Id}`} key={b.Id} className="budget-card"><div className="flex items-start justify-between"><div className={`metric-icon ${['green','violet','blue','amber'][i%4]}`}><ApperIcon name="Wallet" size={19}/></div><span className={`status-pill ${pct>=100?'over':pct>=75?'watch':'healthy'}`}>{pct>=100?'Over limit':pct>=75?'Getting close':'On track'}</span></div><h2 className="mt-5 font-display text-xl font-semibold">{b.Name}</h2><p className="mt-1 text-sm text-muted-foreground">{b.category_c} · {b.month_c}</p><div className="mt-5 flex items-baseline justify-between"><span className="text-sm text-muted-foreground">Spent <strong className="text-foreground">{money(spent)}</strong></span><span className="text-xs text-muted-foreground">of {money(b.limit_c)}</span></div><div className="mt-3 h-2 overflow-hidden rounded-full bg-muted"><div className={`category-bar category-${i%5+1}`} style={{width:`${Math.min(pct,100)}%`}}/></div><div className="mt-3 flex items-center justify-between text-xs text-muted-foreground"><span>{Math.round(pct)}% used</span><span>{money(Math.max(Number(b.limit_c)-spent,0))} left</span></div></Link>})}</div>:<div className="glass-card p-8 text-center text-sm text-muted-foreground">No budgets found. Create a budget to start planning.</div>}
- </div>;
+const money = (v) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v || 0);
+const categories = ['Food & drink', 'Transport', 'Shopping', 'Bills', 'Health', 'Entertainment', 'Subscriptions', 'Travel', 'Education', 'Other'];
+
+export default function Budgets() {
+  const [open, setOpen] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [search, setSearch] = useState('');
+  const [form, setForm] = useState({ Name: '', category_c: 'Food & drink', limit_c: '', month_c: getCurrentMonthLocal(), note_c: '' });
+
+  const { data: budgets, loading, error, run } = useFetch(
+    () => sdk.table('budgets_c').select(['Name', 'category_c', 'limit_c', 'month_c', 'note_c']).orderByDesc('CreatedOn').fetch().then((r) => {
+      if (!r.success) throw new Error(r.message);
+      return r.data;
+    }),
+    []
+  );
+
+  const { data: expenses } = useFetch(
+    () => sdk.table('expenses_c').select(['Name', 'amount_c', 'category_c', 'date_c', 'kind_c']).fetch().then((r) => {
+      if (!r.success) throw new Error(r.message);
+      return r.data;
+    }),
+    []
+  );
+
+  const q = search.trim().toLowerCase();
+  const rows = (budgets ?? []).filter((x) => (x.Name || '').toLowerCase().includes(q) || (x.category_c || '').toLowerCase().includes(q));
+
+  const save = async (e) => {
+    e.preventDefault();
+    if (saving) return;
+    if (!form.Name.trim() || Number(form.limit_c) <= 0) {
+      toast.error('Enter a budget name and a limit greater than zero.');
+      return;
+    }
+    setSaving(true);
+    try {
+      const r = await sdk.table('budgets_c').create({ ...form, limit_c: Number(form.limit_c) });
+      if (!r.data?.length) {
+        toast.error(r.messages?.[0] || 'Could not save budget.');
+        return;
+      }
+      toast.success('Budget created');
+      setOpen(false);
+      setForm({ Name: '', category_c: 'Food & drink', limit_c: '', month_c: getCurrentMonthLocal(), note_c: '' });
+      run();
+    } catch (e) {
+      toast.error(e.message || 'Could not save budget.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const spentFor = (b) => (expenses ?? []).filter((x) => x.kind_c !== 'Income' && x.category_c === b.category_c && Boolean(b.month_c) && (x.date_c || '').startsWith(b.month_c)).reduce((s, x) => s + Number(x.amount_c || 0), 0);
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+        <div>
+          <p className="eyebrow">A PLAN THAT FEELS GOOD</p>
+          <h1 className="page-title">Budgets</h1>
+          <p className="mt-2 text-sm text-muted-foreground">Give every rupee a little direction.</p>
+        </div>
+        <Dialog open={open} onOpenChange={setOpen}>
+          <DialogTrigger asChild>
+            <Button className="h-11 rounded-xl"><ApperIcon name="Plus" size={16} className="mr-2" />Create budget</Button>
+          </DialogTrigger>
+          <DialogContent className="glass-dialog">
+            <DialogHeader>
+              <DialogTitle className="font-display text-2xl">Create a monthly budget</DialogTitle>
+            </DialogHeader>
+            <form onSubmit={save} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Budget name</Label>
+                <Input placeholder="e.g. Weekend fun" value={form.Name} onChange={(e) => setForm({ ...form, Name: e.target.value })} required />
+              </div>
+              <div className="space-y-2">
+                <Label>Category</Label>
+                <Select value={form.category_c} onValueChange={(v) => setForm({ ...form, category_c: v })}>
+                  <SelectTrigger aria-label="Select category"><SelectValue /></SelectTrigger>
+                  <SelectContent>{categories.map((c) => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Monthly limit (₹)</Label>
+                <Input type="number" min="1" step="0.01" placeholder="5000" value={form.limit_c} onChange={(e) => setForm({ ...form, limit_c: e.target.value })} required />
+              </div>
+              <div className="space-y-2">
+                <Label>Month</Label>
+                <Input type="month" value={form.month_c} onChange={(e) => setForm({ ...form, month_c: e.target.value })} required />
+              </div>
+              <div className="space-y-2">
+                <Label>Notes (optional)</Label>
+                <Input placeholder="What this budget is for" value={form.note_c} onChange={(e) => setForm({ ...form, note_c: e.target.value })} />
+              </div>
+              <Button className="w-full rounded-xl" disabled={saving}>{saving ? 'Saving…' : 'Save budget'}</Button>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="metric-glass">
+          <p className="text-sm text-muted-foreground">Active budgets</p>
+          <p className="mt-3 font-display text-2xl font-semibold">{rows.length}</p>
+        </div>
+        <div className="metric-glass">
+          <p className="text-sm text-muted-foreground">Total planned</p>
+          <p className="mt-3 font-display text-2xl font-semibold">{money(rows.reduce((s, b) => s + Number(b.limit_c || 0), 0))}</p>
+        </div>
+        <div className="metric-glass">
+          <p className="text-sm text-muted-foreground">Remaining total</p>
+          <p className="mt-3 font-display text-2xl font-semibold">{money(rows.reduce((s, b) => s + Math.max(Number(b.limit_c || 0) - spentFor(b), 0), 0))}</p>
+        </div>
+      </div>
+
+      <div className="relative">
+        <ApperIcon name="Search" size={17} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+        <Input className="pl-9" placeholder="Find a budget…" aria-label="Find a budget" value={search} onChange={(e) => setSearch(e.target.value)} />
+      </div>
+
+      {loading && !budgets ? (
+        <div className="glass-card p-6">Loading budgets…</div>
+      ) : error ? (
+        <div className="glass-card p-6 text-destructive">{typeof error === 'string' ? error : error?.message || 'Failed to load budgets.'} <button onClick={run} className="underline">Retry</button></div>
+      ) : rows.length ? (
+        <div className="grid gap-4 md:grid-cols-2">
+          {rows.map((b, i) => {
+            const spent = spentFor(b);
+            const limit = Number(b.limit_c) || 0;
+            const pct = limit > 0 ? (spent / limit) * 100 : 0;
+            return (
+              <Link to={`/budgets/${b.Id}`} key={b.Id} className="budget-card">
+                <div className="flex items-start justify-between">
+                  <div className={`metric-icon ${['green', 'violet', 'blue', 'amber'][i % 4]}`}><ApperIcon name="Wallet" size={19} /></div>
+                  <span className={`status-pill ${pct >= 100 ? 'over' : pct >= 75 ? 'watch' : 'healthy'}`}>{pct >= 100 ? 'Over limit' : pct >= 75 ? 'Getting close' : 'On track'}</span>
+                </div>
+                <h2 className="mt-5 font-display text-xl font-semibold">{b.Name}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{b.category_c} · {b.month_c}</p>
+                <div className="mt-5 flex items-baseline justify-between">
+                  <span className="text-sm text-muted-foreground">Spent <strong className="text-foreground">{money(spent)}</strong></span>
+                  <span className="text-xs text-muted-foreground">of {money(b.limit_c)}</span>
+                </div>
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-muted">
+                  <div className={`category-bar category-${(i % 5) + 1}`} style={{ width: `${Math.min(Math.max(pct, 0), 100)}%` }} />
+                </div>
+                <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground">
+                  <span>{Math.round(pct)}% used</span>
+                  <span>{money(Math.max(limit - spent, 0))} left</span>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="glass-card p-8 text-center text-sm text-muted-foreground">No budgets found. Create a budget to start planning.</div>
+      )}
+    </div>
+  );
 }

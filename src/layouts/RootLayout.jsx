@@ -65,7 +65,8 @@ export default function RootLayout() {
   function handlePostAuthNavigation() {
     const params = new URLSearchParams(window.location.search);
     const redirectPath = params.get('redirect');
-    if (redirectPath) {
+    const isSafeRedirect = redirectPath && redirectPath.startsWith('/') && !redirectPath.startsWith('//') && !redirectPath.startsWith('/\\') && !redirectPath.includes(':');
+    if (isSafeRedirect) {
       navigateRef.current(redirectPath, { replace: true });
       return;
     }
@@ -86,6 +87,10 @@ export default function RootLayout() {
 
   useEffect(() => {
     if (!isInitialized) return;
+    if (user && AUTH_PAGE_PATTERN.test(location.pathname)) {
+      handlePostAuthNavigation();
+      return;
+    }
     if (!allowed) {
       const loginRoute = APP_CONFIG.defaultLoginRoute ?? '/login';
       if (user) {

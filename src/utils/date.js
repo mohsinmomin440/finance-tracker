@@ -37,3 +37,31 @@ export const DATE_FORMATS = {
   TIME_ONLY: 'h:mm a',                // "3:00 PM"
   NUMERIC: 'MM/dd/yyyy',              // "05/21/2026"
 };
+
+/**
+ * Returns today's date formatted as YYYY-MM-DD in the user's local timezone.
+ */
+export function getTodayLocal() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  const day = String(now.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+/**
+ * Returns the current month formatted as YYYY-MM in the user's local timezone.
+ */
+export function getCurrentMonthLocal() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
+/**
+ * Returns today's weekday name in uppercase (e.g. "WEDNESDAY") in local timezone.
+ */
+export function getTodayWeekday() {
+  return new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(new Date()).toUpperCase();
+}

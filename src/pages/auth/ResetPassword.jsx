@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { sdk } from '@/services/sdk';
 import ApperIcon from '@/components/ApperIcon';
 import { Input } from '@/components/ui/input';
@@ -26,8 +26,9 @@ export default function ResetPassword() {
 }
 
 function HeadlessResetPassword() {
+  const { fields, token: paramToken } = useParams();
   const [params] = useSearchParams();
-  const token = params.get('token') || '';
+  const token = params.get('token') || paramToken || fields || '';
 
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
