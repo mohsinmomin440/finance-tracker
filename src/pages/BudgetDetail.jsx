@@ -458,29 +458,35 @@ export default function BudgetDetail() {
           </p>
         </div>
 
-        {/* Linked Transactions Section */}
+        {/* Linked Transactions Section: all matching records that compose the Spent total */}
         {matchingExpenses.length > 0 && (
           <div className="mt-6 space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                Transactions in this category ({matchingExpenses.length})
+                Contributing transactions ({matchingExpenses.length})
               </h3>
               <Link to="/expenses" className="text-xs font-semibold text-primary hover:underline">
                 View all transactions →
               </Link>
             </div>
             <div className="divide-y divide-border/40 rounded-2xl border border-white/10 dark:border-white/5 bg-card/30 overflow-hidden">
-              {matchingExpenses.slice(0, 5).map((x) => (
-                <div key={x.Id} className="flex items-center justify-between p-3.5 text-xs">
-                  <div className="min-w-0 flex-1 pr-3">
-                    <p className="font-semibold text-foreground truncate">{x.Name}</p>
-                    <p className="text-muted-foreground mt-0.5">{x.date_c} · {x.paymentMethod_c || 'Direct'}</p>
+              <div className="max-h-80 overflow-y-auto divide-y divide-border/40">
+                {matchingExpenses.map((x) => (
+                  <div key={x.Id} className="flex items-center justify-between p-3.5 text-xs hover:bg-white/[0.02] transition-colors">
+                    <div className="min-w-0 flex-1 pr-3">
+                      <p className="font-semibold text-foreground truncate">{x.Name}</p>
+                      <p className="text-muted-foreground mt-0.5">{x.date_c} · {x.paymentMethod_c || 'Direct'}</p>
+                    </div>
+                    <span className="font-bold tabular-nums text-rose-400 shrink-0">
+                      −{money(x.amount_c)}
+                    </span>
                   </div>
-                  <span className="font-bold tabular-nums text-rose-400 shrink-0">
-                    −{money(x.amount_c)}
-                  </span>
-                </div>
-              ))}
+                ))}
+              </div>
+              <div className="flex items-center justify-between p-3.5 bg-card/50 text-xs font-semibold border-t border-border/50">
+                <span className="text-muted-foreground">Total spent across these {matchingExpenses.length} transactions:</span>
+                <span className="font-bold tabular-nums text-foreground">{money(spent)}</span>
+              </div>
             </div>
           </div>
         )}
