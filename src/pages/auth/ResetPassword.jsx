@@ -60,13 +60,18 @@ function HeadlessResetPassword() {
   if (done) {
     return (
       <AuthLayout title="Password reset" icon="CheckCircle">
-        <div className="rounded-xl border bg-muted/30 p-5 text-center space-y-4">
-          <div className="size-12 rounded-full bg-success/10 flex items-center justify-center mx-auto">
-            <ApperIcon name="CheckCircle" size={24} className="text-success" />
+        <div className="rounded-2xl border border-white/10 dark:border-white/5 bg-card/50 p-6 text-center space-y-4">
+          <div className="size-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/25 flex items-center justify-center mx-auto text-emerald-400 shadow-sm">
+            <ApperIcon name="CheckCircle2" size={28} />
           </div>
-          <p className="text-sm text-foreground">Your password has been reset successfully.</p>
-          <Button asChild className="w-full h-9">
-            <Link to="/login">Sign in</Link>
+          <div className="space-y-1">
+            <h3 className="font-display text-base font-semibold text-foreground">Password updated</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+              Your password has been successfully reset. You can now use your new credentials to sign in.
+            </p>
+          </div>
+          <Button asChild className="w-full min-h-[44px] h-11 rounded-xl bg-primary text-primary-foreground font-semibold shadow-md hover:bg-primary/90 mt-2">
+            <Link to="/login">Sign in now</Link>
           </Button>
         </div>
       </AuthLayout>
@@ -76,12 +81,12 @@ function HeadlessResetPassword() {
   return (
     <AuthLayout
       title="Reset password"
-      description="Enter your new password below."
+      description="Choose a strong, unique password to secure your account."
       icon="KeyRound"
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <div className="space-y-1">
-          <Label htmlFor="password">New password</Label>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+        <div className="space-y-1.5">
+          <Label htmlFor="password" className="text-xs font-semibold text-foreground/90">New password</Label>
           <div className="relative">
             <Input
               id="password"
@@ -90,20 +95,21 @@ function HeadlessResetPassword() {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoFocus
-              className="h-9 pr-10"
+              className="min-h-[44px] h-11 rounded-xl border-border/60 bg-card/60 backdrop-blur-md focus-visible:ring-primary text-sm pr-11"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
-              tabIndex={-1}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute inset-y-0 right-0 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
             >
-              <ApperIcon name={showPassword ? 'EyeOff' : 'Eye'} size={16} />
+              <ApperIcon name={showPassword ? 'EyeOff' : 'Eye'} size={17} />
             </button>
           </div>
         </div>
-        <div className="space-y-1">
-          <Label htmlFor="confirmPassword">Confirm new password</Label>
+
+        <div className="space-y-1.5">
+          <Label htmlFor="confirmPassword" className="text-xs font-semibold text-foreground/90">Confirm new password</Label>
           <div className="relative">
             <Input
               id="confirmPassword"
@@ -111,22 +117,44 @@ function HeadlessResetPassword() {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               required
-              className="h-9 pr-10"
+              className="min-h-[44px] h-11 rounded-xl border-border/60 bg-card/60 backdrop-blur-md focus-visible:ring-primary text-sm pr-11"
             />
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
-              tabIndex={-1}
+              aria-label={showConfirmPassword ? 'Hide password confirmation' : 'Show password confirmation'}
+              className="absolute inset-y-0 right-0 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
             >
-              <ApperIcon name={showConfirmPassword ? 'EyeOff' : 'Eye'} size={16} />
+              <ApperIcon name={showConfirmPassword ? 'EyeOff' : 'Eye'} size={17} />
             </button>
           </div>
         </div>
-        {error && <p className="text-sm text-destructive">{error}</p>}
+
+        {error && (
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium"
+          >
+            <ApperIcon name="AlertCircle" size={16} className="shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
         <div className="pt-2">
-          <Button type="submit" disabled={loading} className="w-full h-9">
-            {loading ? 'Resetting…' : 'Reset password'}
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full min-h-[44px] h-11 rounded-xl bg-primary text-primary-foreground font-semibold shadow-md hover:bg-primary/90 disabled:opacity-60 transition-all"
+          >
+            {loading ? (
+              <>
+                <ApperIcon name="Loader2" size={16} className="animate-spin mr-2" />
+                Resetting…
+              </>
+            ) : (
+              'Reset password'
+            )}
           </Button>
         </div>
       </form>

@@ -121,13 +121,14 @@ export default function Expenses() {
 
   const rows = data ?? [];
 
-  // Summary figures calculated strictly from the currently filtered dataset
+  // Summary figures calculated strictly from the currently filtered dataset.
+  // Missing, null, NaN, or invalid negative amounts are safely treated as 0.
   const { totalInflow, totalOutflow } = useMemo(() => {
     let inflow = 0;
     let outflow = 0;
     rows.forEach((r) => {
       const amt = Number(r.amount_c);
-      const safeAmt = isNaN(amt) || amt === null || amt === undefined ? 0 : amt;
+      const safeAmt = isNaN(amt) || amt === null || amt === undefined ? 0 : Math.max(0, amt);
       if (r.kind_c === 'Income') inflow += safeAmt;
       else outflow += safeAmt;
     });

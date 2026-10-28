@@ -99,12 +99,33 @@ export default function AuthPage({ mode }) {
     return (
       <AuthLayout title="Unable to connect" icon="WifiOff">
         <div className="text-center space-y-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground leading-relaxed">
             Authentication service is unreachable. This may be due to a network issue or CORS configuration.
           </p>
-          {error && <p className="text-sm text-destructive">{error}</p>}
-          <Button variant="outline" onClick={handleRetry} disabled={loading} className="w-full">
-            {loading ? 'Retrying…' : 'Retry'}
+          {error && (
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium text-left"
+            >
+              <ApperIcon name="AlertTriangle" size={16} className="shrink-0" />
+              <span>{error}</span>
+            </div>
+          )}
+          <Button
+            variant="outline"
+            onClick={handleRetry}
+            disabled={loading}
+            className="w-full min-h-[44px] h-11 rounded-xl border-white/15 dark:border-white/10 hover:border-primary/40 font-semibold"
+          >
+            {loading ? (
+              <>
+                <ApperIcon name="Loader2" size={16} className="animate-spin mr-2" />
+                Retrying…
+              </>
+            ) : (
+              'Retry connection'
+            )}
           </Button>
         </div>
       </AuthLayout>
@@ -114,7 +135,7 @@ export default function AuthPage({ mode }) {
   if (hasUI) {
     return (
       <AuthLayout title={title} description={description}>
-        <div id={AUTH_TARGET_ID} className="flex flex-col" />
+        <div id={AUTH_TARGET_ID} className="flex flex-col min-h-[180px]" />
         <AuthFooter mode={mode} profilePrefix={profileParam} altLinksLeadIn={matchedProfile?.altLinksLeadIn} altLinks={matchedProfile?.altLinks} />
       </AuthLayout>
     );
@@ -122,9 +143,9 @@ export default function AuthPage({ mode }) {
 
   return (
     <AuthLayout title={title} description={description}>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        <div className="space-y-1">
-          <Label htmlFor="email">Email</Label>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
+        <div className="space-y-1.5">
+          <Label htmlFor="email" className="text-xs font-semibold text-foreground/90">Email address</Label>
           <Input
             id="email"
             type="email"
@@ -133,14 +154,17 @@ export default function AuthPage({ mode }) {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoFocus
-            className="h-9"
+            className="min-h-[44px] h-11 rounded-xl border-border/60 bg-card/60 backdrop-blur-md focus-visible:ring-primary text-sm"
           />
         </div>
-        <div className="space-y-1">
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="text-xs font-semibold text-foreground/90">Password</Label>
             {mode === 'login' && (
-              <Link to="/forgot-password" className="text-xs text-primary hover:text-primary/80 transition-colors">
+              <Link
+                to="/forgot-password"
+                className="text-xs text-primary font-medium hover:underline transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
+              >
                 Forgot password?
               </Link>
             )}
@@ -152,21 +176,21 @@ export default function AuthPage({ mode }) {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="h-9 pr-10"
+              className="min-h-[44px] h-11 rounded-xl border-border/60 bg-card/60 backdrop-blur-md focus-visible:ring-primary text-sm pr-11"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
-              tabIndex={-1}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
+              className="absolute inset-y-0 right-0 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
             >
-              <ApperIcon name={showPassword ? 'EyeOff' : 'Eye'} size={16} />
+              <ApperIcon name={showPassword ? 'EyeOff' : 'Eye'} size={17} />
             </button>
           </div>
         </div>
         {mode === 'signup' && (
-          <div className="space-y-1">
-            <Label htmlFor="confirmPassword">Confirm Password</Label>
+          <div className="space-y-1.5">
+            <Label htmlFor="confirmPassword" className="text-xs font-semibold text-foreground/90">Confirm Password</Label>
             <div className="relative">
               <Input
                 id="confirmPassword"
@@ -174,23 +198,48 @@ export default function AuthPage({ mode }) {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                className="h-9 pr-10"
+                className="min-h-[44px] h-11 rounded-xl border-border/60 bg-card/60 backdrop-blur-md focus-visible:ring-primary text-sm pr-11"
               />
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
-                tabIndex={-1}
+                aria-label={showConfirmPassword ? 'Hide password confirmation' : 'Show password confirmation'}
+                className="absolute inset-y-0 right-0 min-h-[44px] min-w-[44px] flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-xl"
               >
-                <ApperIcon name={showConfirmPassword ? 'EyeOff' : 'Eye'} size={16} />
+                <ApperIcon name={showConfirmPassword ? 'EyeOff' : 'Eye'} size={17} />
               </button>
             </div>
           </div>
         )}
-        {error && <p className="text-sm text-destructive">{error}</p>}
+
+        {/* Visible accessible error banner */}
+        {error && (
+          <div
+            role="alert"
+            aria-live="assertive"
+            className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-medium mt-1"
+          >
+            <ApperIcon name="AlertCircle" size={16} className="shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
         <div className="pt-2">
-          <Button type="submit" disabled={loading} className="w-full h-9">
-            {loading ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'}
+          <Button
+            type="submit"
+            disabled={loading}
+            className="w-full min-h-[44px] h-11 rounded-xl bg-primary text-primary-foreground font-semibold shadow-md hover:bg-primary/90 disabled:opacity-60 transition-all"
+          >
+            {loading ? (
+              <>
+                <ApperIcon name="Loader2" size={16} className="animate-spin mr-2" />
+                Please wait…
+              </>
+            ) : mode === 'login' ? (
+              'Sign in'
+            ) : (
+              'Create account'
+            )}
           </Button>
         </div>
       </form>
@@ -202,40 +251,52 @@ export default function AuthPage({ mode }) {
 function AuthFooter({ mode, profilePrefix, altLinksLeadIn, altLinks }) {
   const base = profilePrefix ? `/${profilePrefix}` : '';
   return (
-    <div className="mt-8 space-y-5">
-      <p className="text-[13px] text-center text-muted-foreground">
+    <div className="mt-7 space-y-4 pt-4 border-t border-border/40">
+      <p className="text-xs text-center text-muted-foreground">
         {mode === 'login' ? (
-          <>Don&apos;t have an account?{' '}
-            <Link to={`${base}/signup`} className="text-primary font-medium hover:underline underline-offset-4 transition-colors">Sign up</Link>
+          <>
+            Don&apos;t have an account?{' '}
+            <Link
+              to={`${base}/signup`}
+              className="text-primary font-semibold hover:underline underline-offset-4 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
+            >
+              Sign up
+            </Link>
           </>
         ) : (
-          <>Already have an account?{' '}
-            <Link to={`${base}/login`} className="text-primary font-medium hover:underline underline-offset-4 transition-colors">Sign in</Link>
+          <>
+            Already have an account?{' '}
+            <Link
+              to={`${base}/login`}
+              className="text-primary font-semibold hover:underline underline-offset-4 transition-colors outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
+            >
+              Sign in
+            </Link>
           </>
         )}
       </p>
       {altLinks?.length > 0 && (
         <>
           <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-border/50" />
-            <span className="text-[11px] text-muted-foreground/60 uppercase tracking-widest select-none">or continue as</span>
-            <div className="h-px flex-1 bg-border/50" />
+            <div className="h-px flex-1 bg-border/40" />
+            <span className="text-[10px] text-muted-foreground/60 uppercase tracking-widest select-none">or continue as</span>
+            <div className="h-px flex-1 bg-border/40" />
           </div>
           <div className="flex flex-col gap-2">
             {altLinks.map((link) => (
               <Link
                 key={link.href}
                 to={link.href}
-                className="group flex items-center gap-3 rounded-lg border border-border/50 bg-muted/30 px-4 py-3 hover:border-primary/20 hover:bg-primary/[0.03] transition-all"
+                className="group flex items-center gap-3 rounded-xl border border-white/10 dark:border-white/5 bg-card/40 p-3 hover:border-primary/30 hover:bg-card/70 transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary"
               >
-                <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
                   <ApperIcon name="UserRound" size={16} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground">{link.label}</p>
-                  {altLinksLeadIn && <p className="text-xs text-muted-foreground truncate">{altLinksLeadIn}</p>}
+                  <p className="text-xs font-semibold text-foreground group-hover:text-primary transition-colors">{link.label}</p>
+                  {altLinksLeadIn && <p className="text-[11px] text-muted-foreground truncate">{altLinksLeadIn}</p>}
                 </div>
-                <ApperIcon name="ChevronRight" size={16} className="text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                <ApperIcon name="ChevronRight" size={15} className="text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
               </Link>
             ))}
           </div>

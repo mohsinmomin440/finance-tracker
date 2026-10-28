@@ -20,18 +20,38 @@ export default function ErrorPage() {
 
   return (
     <AuthLayout title="Something went wrong" icon="AlertCircle">
-      <div className="text-center space-y-4">
-        <p className="text-sm text-muted-foreground">{message}</p>
+      <div className="text-center space-y-5">
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs sm:text-sm font-medium leading-relaxed"
+        >
+          {message}
+        </div>
         {errorCode && (
-          <p className="text-xs text-muted-foreground/60 font-mono">Code: {errorCode}</p>
+          <p className="text-xs text-muted-foreground/70 font-mono">
+            Error Code: <span className="text-foreground">{errorCode}</span>
+          </p>
         )}
-        <div className="flex items-center justify-center gap-3 pt-1">
-          <Link to="/login" className={cn(buttonVariants({ variant: 'outline' }), 'h-9 inline-flex items-center gap-1.5')}>
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5 pt-2">
+          <Link
+            to="/login"
+            className={cn(
+              buttonVariants({ variant: 'outline' }),
+              'w-full sm:w-auto min-h-[44px] h-11 rounded-xl border-white/15 dark:border-white/10 hover:border-primary/40 font-semibold inline-flex items-center justify-center gap-2'
+            )}
+          >
             <ApperIcon name="ArrowLeft" size={16} />
             Back to login
           </Link>
-          <Link to="/" className={cn(buttonVariants({ variant: 'ghost' }), 'h-9')}>
-            Home
+          <Link
+            to="/"
+            className={cn(
+              buttonVariants({ variant: 'ghost' }),
+              'w-full sm:w-auto min-h-[44px] h-11 rounded-xl font-medium'
+            )}
+          >
+            Go to overview
           </Link>
         </div>
       </div>
